@@ -16,24 +16,10 @@
 
 ## 项目截图
 
-可以在这里放置后台和用户前台截图：
 
-```text
-docs/images/admin-dashboard.png
-docs/images/user-rent-modal.png
+<img width="1910" height="915" alt="image" src="https://github.com/user-attachments/assets/7b5468c2-b0f5-4f5e-8545-ac0d3de5f31b" />
+
 ```
-
-## 在线演示
-
-可以在这里填写你的演示站地址：
-
-```text
-演示地址：https://demo.example.com
-后台演示：admin_demo / demo_password
-```
-
-建议演示后台使用只读账号，避免真实数据被修改。
-
 ## 运行环境
 
 - PHP 7.4 或以上
