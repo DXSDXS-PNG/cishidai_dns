@@ -1,0 +1,69 @@
+DNS 二级域名分发系统部署教程
+
+运行环境
+
+- PHP 7.4 
+- MySQL 5.7 
+- Nginx 
+
+部署步骤
+
+1. 解压源码包
+2. 创建数据库
+3. 导入初始化 SQL
+
+导入源码里的 install.sql：
+
+4. 修改数据库配置
+
+编辑 db_config.php：
+
+return [
+    'host' => '127.0.0.1',
+    'port' => 3306,
+    'dbname' => 'dns_distribution',
+    'user' => '数据库用户名',
+    'pass' => '数据库密码'
+];
+
+5. 设置目录权限
+
+确保 data/ 目录可写：
+
+chmod -R 755 data
+chown -R www:www data
+
+如果你的 Web 用户不是 www，请按实际环境调整。
+
+6. 配置伪静态
+location /data/ {
+    deny all;
+}
+
+location /api/ {
+    try_files $uri $uri/ /index.php?$query_string;
+}
+
+location /admin {
+    try_files $uri $uri/ /index.php?$query_string;
+}
+
+location / {
+    try_files $uri $uri/ /index.php?$query_string;
+}
+
+Nginx 可参考源码里的 nginx.conf。
+
+核心规则是把 /api/...、/admin、/user 等入口交给站点文件处理。
+
+7. 登录后台
+
+访问：
+
+https://你的域名/admin
+
+默认账号：
+
+admin / admin123
+
+首次登录后请立刻修改默认密码。

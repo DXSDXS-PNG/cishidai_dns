@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-CN">
+<!-- 作者D先生微信（二次开发/开通域名违规检测功能/程序定制）：A1565182 -->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>我的账户 - 二级域名租用</title>
+  <link rel="stylesheet" href="/tenant.css?v=20260610-notice1">
+</head>
+<body class="app-initializing">
+  <main>
+    <section id="authView" class="auth-shell">
+      <div class="auth-copy">
+        <p class="eyebrow">租户入口</p>
+        <h1>注册或登录后进入用户控制台</h1>
+        <p>在控制台里选择主域名、提交解析租用申请，并查看账户、解析和订单状态。</p>
+      </div>
+
+      <div class="auth-panel">
+        <div class="auth-tabs">
+          <button id="loginTab" class="active" type="button">登录</button>
+          <button id="registerTab" type="button">注册</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <label><span>账号</span><input name="username" autocomplete="username" required></label>
+          <label><span>密码</span><input name="password" type="password" autocomplete="current-password" required></label>
+          <p id="loginMsg" class="hint"></p>
+          <button type="submit" class="primary-btn">登录</button>
+        </form>
+
+        <form id="registerForm" class="auth-form hidden">
+          <label><span>账号</span><input name="username" minlength="3" maxlength="32" autocomplete="username" required></label>
+          <label><span>密码</span><input name="password" type="password" minlength="6" autocomplete="new-password" required></label>
+          <label><span>确认密码</span><input name="confirmPassword" type="password" minlength="6" autocomplete="new-password" required></label>
+          <p id="registerMsg" class="hint"></p>
+          <button type="submit" class="primary-btn">注册并进入控制台</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="rentView" class="tenant-console hidden">
+      <aside class="console-sidebar">
+        <p class="sidebar-group">我的账户</p>
+        <button class="side-item active" type="button" data-panel="dashboardPanel"><span>控制台</span></button>
+        <button class="side-item" type="button" data-panel="domainsPanel"><span>解析管理</span></button>
+        <button class="side-item" type="button" data-panel="orderPanel"><span>充值积分</span></button>
+        <button class="side-item" type="button" data-panel="historyPanel"><span>使用记录</span></button>
+        <button class="side-item" type="button" data-panel="noticePanel"><span>消息通知</span></button>
+        <button class="side-item" type="button" data-panel="profilePanel"><span>个人资料</span></button>
+      </aside>
+
+      <div class="console-main">
+        <header class="console-topbar">
+          <div class="breadcrumb"><button id="menuToggle" type="button">☰</button><span>首页</span><em>/</em><span>我的账户</span><em>/</em><span>控制台</span></div>
+          <div class="user-bar">
+            <button id="fullscreenBtn" class="icon-btn" type="button">⛶</button>
+            <span id="topAvatar" class="avatar avatar-placeholder">👤</span>
+            <strong id="tenantName">租户</strong>
+            <button id="logoutBtn" class="logout-link" type="button">退出</button>
+          </div>
+        </header>
+
+        <div class="console-scroll">
+          <section id="dashboardPanel" class="panel-section">
+            <div class="stat-grid">
+              <article class="stat-card"><span>积分余额</span><strong id="statCredits">0</strong></article>
+              <article class="stat-card"><span>解析数量</span><strong id="statRecords">0</strong></article>
+              <article class="stat-card"><span>用户名</span><strong id="statUsername">租户</strong></article>
+            </div>
+
+            <div class="quick-panel">
+              <button class="quick-card" type="button" data-panel="domainsPanel"><i>▦</i><strong>解析管理</strong><span>选择主域名并创建解析</span></button>
+              <button class="quick-card" type="button" data-panel="orderPanel"><i>▰</i><strong>充值积分</strong><span>充值后用积分租赁域名</span></button>
+              <button class="quick-card" type="button" data-panel="historyPanel"><i>□</i><strong>使用记录</strong><span>查看充值和消费流水</span></button>
+              <button class="quick-card" type="button" data-panel="noticePanel"><i>✉</i><strong>消息通知</strong><span>查看平台提醒和公告</span></button>
+              <button class="quick-card" type="button" data-panel="profilePanel"><i>●</i><strong>个人资料</strong><span>管理账号资料和密码</span></button>
+            </div>
+          </section>
+
+<section id="domainsPanel" class="board-card panel-section">
+            <div class="board-head"><h2>域名列表</h2><button id="reloadBtn" class="outline-btn" type="button">↻ 刷新</button></div>
+            <div id="domainGrid" class="domain-grid"></div>
+          </section>
+
+          <section id="orderPanel" class="rent-workspace panel-section">
+            <div class="board-card balance-panel">
+              <h2>充值积分</h2>
+              <div class="balance-row">
+                <div><span>当前积分</span><strong id="currentBalance">0</strong></div>
+                <form id="rechargeForm" class="recharge-form">
+                  <input id="rechargeAmount" type="number" min="1" step="1" placeholder="充值积分数量">
+                  <button type="submit" class="primary-btn">立即充值</button>
+                </form>
+              </div>
+              <p id="rechargeMsg" class="hint"></p>
+            </div>
+          </section>
+
+          <section class="two-column">
+            <div id="historyPanel" class="board-card panel-section">
+              <div class="board-head"><h2>最近解析</h2><button id="historyRefresh" class="outline-btn" type="button">↻ 刷新</button></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>解析ID</th><th>完整域名</th><th>类型</th><th>状态</th><th>到期时间</th></tr></thead>
+                  <tbody id="recentRows"><tr><td colspan="5" class="empty-cell">暂无数据</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <aside id="accountOverviewPanel" class="board-card account-card panel-section">
+              <h2>账户概览</h2>
+              <dl>
+                <div><dt>用户名</dt><dd id="overviewUsername">租户</dd></div>
+                <div><dt>积分余额</dt><dd id="overviewCredits">0</dd></div>
+                <div><dt>解析数量</dt><dd id="overviewRecords">0</dd></div>
+                <div><dt>联系方式</dt><dd id="overviewContact">-</dd></div>
+              </dl>
+              <section class="credit-log-panel">
+                <h3>积分记录</h3>
+                <div id="creditLogList" class="credit-log-list">
+                  <div class="credit-empty">暂无积分记录</div>
+                </div>
+              </section>
+            </aside>
+          </section>
+
+          <section id="noticePanel" class="board-card panel-section">
+            <div class="board-head"><h2>公告列表</h2><button id="noticeRefresh" class="outline-btn" type="button">↻ 刷新</button></div>
+            <div id="noticeList" class="notice-list"><div class="empty-line">暂无公告</div></div>
+          </section>
+
+          <section id="profilePanel" class="profile-layout panel-section">
+            <aside class="profile-summary-card">
+              <label class="profile-avatar-uploader" title="点击更换头像">
+                <input id="avatarInput" type="file" accept="image/*">
+                <span id="profileAvatarPreview" class="profile-avatar-large avatar-placeholder">👤</span>
+                <em>更换头像</em>
+              </label>
+              <h2 id="profileCardName">租户</h2>
+              <p id="profileCardUsername">租户</p>
+              <div class="profile-badges">
+                <span>账号正常</span>
+                <span>邮箱待验证</span>
+              </div>
+              <div class="profile-bind-grid">
+                <div><strong>已绑定</strong><span>邮箱</span></div>
+                <div><strong>未绑定</strong><span>手机</span></div>
+              </div>
+              <dl class="profile-meta-list">
+                <div><dt>用户名</dt><dd id="profileMetaUsername">租户</dd></div>
+                <div><dt>邮箱</dt><dd id="profileMetaEmail">-</dd></div>
+                <div><dt>角色</dt><dd>普通角色</dd></div>
+                <div><dt>创建日期</dt><dd id="profileMetaCreated">-</dd></div>
+              </dl>
+            </aside>
+
+            <section class="profile-form-card">
+              <div class="profile-form-head">
+                <div>
+                  <h2>个人资料</h2>
+                  <p>管理登录身份、联系方式和账号密码</p>
+                </div>
+                <span class="mail-status">邮箱验证已开启</span>
+              </div>
+              <div class="profile-tabs">
+                <button class="active" type="button" data-profile-tab="base">基本资料</button>
+                <button type="button" data-profile-tab="password">修改密码</button>
+              </div>
+              <form id="profileForm" class="profile-form">
+                <label><span><b>*</b> 用户名</span><input id="profileUsernameInput" readonly></label>
+                <label><span>用户昵称</span><input id="profileNameInput" maxlength="60"></label>
+                <label><span>手机号码</span><input id="profilePhoneInput" maxlength="30"></label>
+                <label><span>邮箱</span><input id="profileEmailInput" maxlength="80"></label>
+                <div class="profile-actions">
+                  <button type="submit" class="primary-btn">保存</button>
+                  <button type="button" class="danger-btn" data-panel="dashboardPanel">关闭</button>
+                </div>
+                <p id="profileMsg" class="hint"></p>
+              </form>
+              <form id="passwordForm" class="profile-form hidden">
+                <label><span>当前密码</span><input name="currentPassword" type="password" autocomplete="current-password" required></label>
+                <label><span>新密码</span><input name="newPassword" type="password" minlength="6" autocomplete="new-password" required></label>
+                <label><span>确认新密码</span><input name="confirmPassword" type="password" minlength="6" autocomplete="new-password" required></label>
+                <div class="profile-actions">
+                  <button type="submit" class="primary-btn">保存</button>
+                  <button type="button" class="danger-btn" data-panel="dashboardPanel">关闭</button>
+                </div>
+                <p id="passwordMsg" class="hint"></p>
+              </form>
+            </section>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="rentModal" class="tenant-modal hidden">
+    <div class="tenant-modal-backdrop" data-close-rent></div>
+    <section class="tenant-modal-dialog order-panel" role="dialog" aria-modal="true" aria-labelledby="rentModalTitle">
+      <div class="tenant-modal-head">
+        <div>
+          <h2 id="rentModalTitle">积分租赁域名</h2>
+          <p class="resolve-notice">提交后系统会按你填写的记录类型和值创建 DNS 解析，请确认记录值准确无误。</p>
+        </div>
+        <button class="tenant-modal-close" type="button" data-close-rent>×</button>
+      </div>
+      <form id="rentForm">
+        <label><span>选择主域名</span><select name="domainId" id="domainSelect"></select></label>
+        <label><span>二级前缀</span><div class="host-row"><input name="host" id="hostInput" placeholder="例如 brand001" required><button type="button" id="checkBtn">查重</button></div></label>
+        <p id="checkResult" class="hint">提交租赁时会自动查重。</p>
+        <div class="split"><label><span>租期</span><select name="months" id="monthsSelect"><option value="1" selected>1 个月</option><option value="3">3 个月</option><option value="6">6 个月</option><option value="12">12 个月</option></select></label><label><span>解析类型</span><select name="recordType"><option>A</option><option>AAAA</option><option>CNAME</option><option>MX</option><option>TXT</option><option>NS</option><option>SRV</option><option>CAA</option></select></label></div>
+        <input type="hidden" name="payType" value="credits">
+        <label><span>解析目标</span><input name="recordValue" placeholder="IP 或 CNAME 目标" required></label>
+        <div class="quote"><span>扣除积分</span><strong id="priceText">0</strong></div>
+        <button type="submit" class="primary-btn">使用积分租赁</button>
+      </form>
+      <div id="orderResult" class="order-result hidden"></div>
+    </section>
+  </div>
+
+  <script src="/tenant.js?v=20260611-notices2"></script>
+</body>
+</html>

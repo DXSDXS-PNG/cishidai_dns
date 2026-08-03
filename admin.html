@@ -1,0 +1,893 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<!-- 作者D先生微信（二次开发/开通域名违规检测功能/程序定制）：A1565182 -->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>DNS二级域名管理系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#edf7ff;--card:#fff;--panel:#fbfdff;--border:#dfe8f1;--line:#e6edf5;--text:#172033;--muted:#697d96;--primary:#2f87ff;--primary-hover:#1673ed;--good:#10a45d;--warn:#a26c00;--bad:#d84a4a;--radius:14px;--shadow:0 14px 32px rgba(77,111,143,.08)}
+html,body{touch-action:manipulation}
+body{font-family:"Segoe UI","Microsoft YaHei",Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+/* 登录页 */
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#eef6ff;padding:24px}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:34px;width:410px;max-width:94vw;box-shadow:0 18px 46px rgba(70,91,117,.12)}
+.login-box h1{text-align:center;font-size:24px;margin-bottom:8px;color:#132037}
+.login-box h1::first-letter{color:var(--primary)}
+.login-box p{text-align:center;color:var(--muted);font-size:14px;margin-bottom:24px}
+.login-box label{display:block;margin-bottom:14px;font-size:14px;color:var(--muted);font-weight:700}
+.login-box input{display:block;width:100%;height:42px;padding:0 12px;margin-top:7px;background:#fff;border:1px solid #d8e3ef;border-radius:var(--radius);color:var(--text);font-size:14px;outline:none}
+.login-box input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,135,255,.12)}
+.login-box button{width:100%;height:42px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:800;cursor:pointer;margin-top:8px}
+.login-box button:hover{background:var(--primary-hover)}
+.login-box .msg{color:var(--bad);font-size:13px;text-align:center;margin-top:12px;min-height:20px}
+.login-box .link{text-align:center;margin-top:16px}
+.login-box .link a{color:var(--primary);text-decoration:none;font-size:13px}
+/* 主布局 */
+.app{display:none;min-height:100vh;background:var(--bg)}
+.app.show{display:grid;grid-template-columns:280px minmax(0,1fr)}
+.app.show.sidebar-collapsed{grid-template-columns:84px minmax(0,1fr)}
+.sidebar{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,#fbfdff,#f6fbff);border-right:1px solid #dde9f5;display:flex;flex-direction:column;box-shadow:8px 0 24px rgba(35,84,125,.06)}
+.sidebar .logo{height:72px;display:flex;align-items:center;gap:8px;padding:0 16px 0 30px;border-bottom:1px solid #e0e9f2;font-size:20px;font-weight:900}
+.sidebar .logo span{color:var(--primary);font-size:18px}
+.sidebar-toggle{margin-left:auto;width:34px;height:34px;border:1px solid #d7e2ef;background:#fff;color:#697d96;border-radius:12px;font-size:18px;font-weight:900;cursor:pointer}
+.sidebar-toggle:hover{border-color:#9fc8ff;color:#1673ed}
+.sidebar-collapsed .sidebar .logo{justify-content:center;padding:0}
+.sidebar-collapsed .sidebar .logo strong,.sidebar-collapsed .sidebar .logo span,.sidebar-collapsed .sidebar nav::before,.sidebar-collapsed .sidebar .user-box span{display:none}
+.sidebar-collapsed .sidebar-toggle{margin:0}
+.sidebar-collapsed .sidebar nav button{justify-content:center;padding:0}
+.sidebar-collapsed .sidebar nav button span{display:none}
+.sidebar-collapsed .sidebar nav button::after{content:attr(data-short);font-size:18px;font-weight:900}
+.sidebar-collapsed .sidebar .user-box{justify-content:center;padding:14px 8px}
+.sidebar-collapsed .sidebar .user-box button{padding:0 10px}
+.sidebar nav{flex:1;padding:18px 8px;overflow-y:auto}
+.sidebar nav::before{content:"管理后台";display:block;margin:0 0 12px;padding:0 6px;color:#8394aa;font-size:14px;font-weight:700}
+.sidebar nav button{width:100%;height:56px;border:0;border-radius:16px;background:transparent;display:flex;align-items:center;padding:0 26px;color:#18243a;font-size:17px;font-weight:800;text-align:left;margin-bottom:8px;cursor:pointer}
+.sidebar nav button i{display:none}
+.sidebar nav button span{font-size:17px}
+.sidebar nav button:hover{background:#eef6ff;color:#0f1d33}
+.sidebar nav button.active{background:linear-gradient(135deg,#338cff,#82d4ff);color:#fff;box-shadow:0 12px 26px rgba(43,139,255,.24)}
+.sidebar nav button.active i{color:#fff}
+.sidebar .user-box{padding:14px 16px;border-top:1px solid #e0e9f2;display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:800}
+.sidebar .user-box button{height:36px;background:#fff;border:1px solid #d7e2ef;color:#697d96;padding:0 14px;border-radius:18px;cursor:pointer;font-size:13px}
+.main{min-width:0;overflow-y:auto;max-height:100vh;padding:0 28px 38px}
+.topbar{position:sticky;top:0;z-index:4;height:72px;background:#fff;border-bottom:1px solid #e0e9f2;display:flex;justify-content:space-between;align-items:center;margin:0 -28px 24px;padding:0 28px}
+.topbar h2{font-size:22px;line-height:1;color:#1e293b}
+.topbar h2::before{content:"首页 / 管理后台 / ";font-size:18px;font-weight:500;color:#8b9bb0}
+.topbar .sub{color:var(--muted);font-size:13px;margin-top:7px}
+.topbar .actions button{height:38px;padding:0 18px;border-radius:22px;cursor:pointer;font-size:14px;margin-left:8px}
+.btn{min-height:36px;padding:0 14px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:800;border:none}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-secondary{background:#fff;color:#54677f;border:1px solid #d7e2ef}
+.btn-secondary:hover{border-color:#9fc8ff;color:#1673ed}
+.btn-danger{background:var(--bad);color:#fff}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;margin-bottom:20px}
+.kpi{height:110px;background:#fff;border:1px solid #e0e8f1;border-radius:20px;padding:20px;box-shadow:var(--shadow)}
+.kpi span{display:block;color:#697d96;font-weight:800;margin-bottom:8px}
+.kpi strong{font-size:30px;color:#111827}
+/* 表格 */
+.panel{background:#fff;border:1px solid #e1e8f0;border-radius:18px;margin-bottom:18px;overflow:hidden;box-shadow:0 10px 24px rgba(80,110,140,.05)}
+.panel-head{min-height:64px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;border-bottom:1px solid #e6edf5}
+.panel-head h3{font-size:22px;color:#172033}
+.panel-body{padding:0;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:16px;text-align:left;border-bottom:1px solid #e5edf5;color:#52647c;white-space:nowrap}
+th{color:#697d96;font-weight:800;background:#fafbfe}
+tr:hover td{background:#fbfdff}
+.mono{font-family:monospace}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:800;background:#eef4fb;color:#5b6f87}
+.badge.good{background:#e8f8ef;color:#11894d}
+.badge.warn{background:#fff5d9;color:#a26c00}
+.badge.bad{background:#fdecec;color:#d14343}
+.muted-text{color:var(--muted);text-align:center;padding:24px}
+.muted{color:var(--muted);font-size:12px}
+.domain-log-table{table-layout:fixed;min-width:1310px}
+.domain-log-table th,.domain-log-table td{padding:12px 14px;vertical-align:top}
+.domain-log-table th:nth-child(1){width:48px}
+.domain-log-table th:nth-child(2){width:170px}
+.domain-log-table th:nth-child(3){width:120px}
+.domain-log-table th:nth-child(4){width:150px}
+.domain-log-table th:nth-child(5){width:310px}
+.domain-log-table th:nth-child(6){width:78px}
+.domain-log-table th:nth-child(7){width:120px}
+.domain-log-table th:nth-child(8){width:155px}
+.domain-log-table th:nth-child(9){width:230px}
+.domain-log-table .url-cell{white-space:normal;word-break:break-all;line-height:1.55;color:#31465f}
+.domain-log-table .path-cell{white-space:normal;word-break:break-all}
+.domain-log-table .status-cell{width:68px;text-align:center}
+.domain-log-table .visit-cell{white-space:normal;line-height:1.5}
+.domain-log-table .source-cell{white-space:normal;word-break:break-all;color:#71839a}
+.domain-log-table .user-cell{white-space:normal;word-break:break-all;color:#31465f}
+.domain-log-table a.url-link{color:#176fd6;text-decoration:none}
+.domain-log-table a.url-link:hover{text-decoration:underline}
+.evidence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+.evidence-card{border:1px solid #e1e8f0;border-radius:14px;background:#fff;overflow:hidden}
+.evidence-card-head{padding:14px 16px;border-bottom:1px solid #e6edf5}
+.evidence-card-select{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:#52647c;font-size:12px;font-weight:800}
+.evidence-card-head strong{display:block;color:#172033;font-size:16px;margin-bottom:6px;word-break:break-all}
+.evidence-meta{display:flex;gap:8px;flex-wrap:wrap;color:#697d96;font-size:12px;line-height:1.6}
+.evidence-shots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px}
+.evidence-shot{min-width:0}
+.evidence-shot a{display:block;text-decoration:none;color:#52647c;font-size:12px;font-weight:800;margin-bottom:6px}
+.evidence-shot img{width:100%;aspect-ratio:9/16;object-fit:cover;object-position:top;border:1px solid #dfe8f1;border-radius:10px;background:#f6f9fc}
+.toolbar{display:flex;justify-content:space-between;align-items:center;padding:0 0 16px;gap:12px}
+.toolbar input,.toolbar select{width:260px;height:42px;padding:0 12px;background:#fff;border:1px solid #d8e3ef;border-radius:14px;color:#172033;font-size:14px;outline:none}
+.toolbar select{width:170px}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,135,255,.12)}
+.batch-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.check-cell{width:46px;text-align:center}
+.check-cell input{width:18px;height:18px;accent-color:var(--primary)}
+/* 弹窗 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.46);z-index:100;align-items:center;justify-content:center;padding:18px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border:1px solid #dfe8f1;border-radius:18px;width:560px;max-width:94vw;max-height:86vh;overflow-y:auto;box-shadow:0 24px 80px rgba(30,55,84,.22)}
+.modal header{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid #e6edf5}
+.modal header h3{font-size:20px}
+.modal header button{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.modal .body{padding:20px}
+.modal footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid #e6edf5}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid label{display:block;font-size:14px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.form-grid input,.form-grid select,.form-grid textarea{width:100%;min-height:40px;padding:0 12px;margin-top:7px;background:#fff;border:1px solid #d8e3ef;border-radius:14px;color:#172033;font-size:14px;outline:none}
+.form-grid textarea{padding:10px 12px}
+.form-grid input:focus,.form-grid select:focus,.form-grid textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(47,135,255,.12)}
+.form-grid .full{grid-column:1/-1}
+.settings-section{padding:18px 20px;border-bottom:1px solid #edf2f7}
+.settings-section:last-child{border-bottom:0}
+.settings-section h4{font-size:17px;color:#172033;margin-bottom:12px}
+.settings-section .form-grid{gap:16px 18px}
+.settings-help{color:#697d96;font-size:13px;line-height:1.7;margin:-4px 0 14px}
+/* toast */
+.toast-container{position:fixed;top:20px;right:20px;z-index:200}
+.toast{background:#fff;border:1px solid #dfe8f1;padding:10px 18px;border-radius:14px;margin-bottom:8px;font-size:14px;box-shadow:0 12px 28px rgba(80,110,140,.14);animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:1100px){.app.show{grid-template-columns:150px minmax(0,1fr)}.sidebar .logo{justify-content:center;padding:0}.sidebar .logo strong{display:none}.sidebar nav::before{display:none}.sidebar nav button{justify-content:center;padding:0}.sidebar nav button span{font-size:15px}.sidebar .user-box{display:none}.grid-2{grid-template-columns:1fr}.panel-head{gap:12px;flex-wrap:wrap;padding:14px 18px}.toolbar{align-items:flex-start;flex-wrap:wrap}.batch-actions{justify-content:flex-start}}
+@media(max-width:760px){body{overflow-x:hidden}.login-page{align-items:flex-start;padding:18px 12px}.login-box{width:100%;padding:24px 18px;border-radius:16px}.app.show{display:block}.sidebar{position:sticky;top:0;z-index:20;height:auto;display:block;border-right:0;border-bottom:1px solid #dde9f5;box-shadow:0 8px 18px rgba(35,84,125,.08)}.sidebar .logo{display:none}.sidebar nav{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:10px;-webkit-overflow-scrolling:touch}.sidebar nav button{width:auto;min-width:82px;flex:0 0 auto;height:44px;margin:0;border-radius:12px;padding:0 14px;white-space:nowrap}.sidebar nav button span{font-size:15px}.main{max-height:none;overflow:visible;padding:0 12px 28px}.topbar{position:static;height:auto;min-height:64px;margin:0 -12px 14px;padding:12px;gap:10px;align-items:flex-start;flex-wrap:wrap}.topbar h2{font-size:20px}.topbar h2::before{display:none}.topbar .sub{font-size:12px}.topbar .actions{width:100%;display:flex;justify-content:flex-start}.topbar .actions button{margin:0}.toolbar{display:block;padding-bottom:12px}.toolbar input{width:100%;margin-bottom:10px}.batch-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.batch-actions .btn,.panel-head .btn{width:100%;min-height:40px}.kpis{grid-template-columns:1fr;gap:12px}.kpi{height:auto;min-height:88px;border-radius:14px;padding:16px}.kpi strong{font-size:26px}.panel{border-radius:14px;margin-bottom:14px}.panel-head{min-height:0;display:block;padding:14px 16px}.panel-head h3{font-size:19px;margin-bottom:10px}.panel-body{overflow-x:auto;-webkit-overflow-scrolling:touch}table{min-width:720px;font-size:14px}th,td{padding:12px}.form-grid{grid-template-columns:1fr;gap:12px}.modal-overlay{align-items:flex-end;padding:0}.modal{width:100%;max-width:none;max-height:92vh;border-radius:18px 18px 0 0}.modal header,.modal .body,.modal footer{padding-left:16px;padding-right:16px}.modal footer{display:grid;grid-template-columns:1fr 1fr}.modal footer .btn{width:100%;min-height:42px}.toast-container{left:12px;right:12px;top:12px}.toast{width:100%}}
+@media(max-width:480px){.sidebar nav button{min-width:76px}.main{padding:0 10px 24px}.topbar{margin:0 -10px 12px;padding:10px}.batch-actions{grid-template-columns:1fr}.btn{width:100%;min-height:40px}.panel-head>div{width:100%}.panel-head>div .btn{margin-top:8px}.login-box h1{font-size:22px}.form-grid input,.form-grid select,.form-grid textarea,.login-box input{min-height:44px}.check-cell{width:38px}table{min-width:680px}}
+</style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <h1>DNS 管理系统</h1>
+    <p>二级域名分发出租管理后台</p>
+    <label>账号<input id="loginUser" autocomplete="off" placeholder="请输入账号"></label>
+    <label>密码<input id="loginPass" type="password" autocomplete="off" placeholder="请输入密码"></label>
+    <button id="loginBtn">登 录</button>
+    <div id="loginMsg" class="msg"></div>
+    <div class="link"><a href="/">前往租户下单前台</a></div>
+  </div>
+</div>
+
+<!-- 管理后台 -->
+<div id="adminApp" class="app">
+  <aside class="sidebar">
+    <div class="logo"><span id="brandIconText">DNS</span><strong id="brandTitleText">分发出租</strong><button id="sidebarToggle" class="sidebar-toggle" type="button" title="收起侧栏">&lt;</button></div>
+    <nav id="sideNav"></nav>
+    <div class="user-box"><span id="userName">管理员</span><button id="logoutBtn">退出</button></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div><h2 id="pageTitle">工作台</h2><div class="sub" id="pageSub"></div></div>
+      <div class="actions"><button class="btn btn-secondary" id="refreshBtn">刷新</button></div>
+    </div>
+    <div id="viewContent"></div>
+  </div>
+</div>
+
+<!-- 弹窗 -->
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal">
+    <header><h3 id="modalTitle">编辑</h3><button id="modalClose">&times;</button></header>
+    <div class="body" id="modalBody"></div>
+    <footer><button class="btn btn-secondary" id="modalCancel">取消</button><button class="btn btn-primary" id="modalSave">保存</button></footer>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ==================== 全局状态 ====================
+const S = {
+  token: localStorage.getItem('dns_admin_token') || '',
+  user: null,
+  data: null,
+  view: 'dashboard',
+  filter: '',
+  path: '/',
+  pathFilters: {domain:'', user:'', status:''},
+  logPage: 1,
+  sidebarCollapsed: localStorage.getItem('dns_sidebar_collapsed') === '1'
+};
+
+const VIEWS = [
+  ['dashboard','工作台','关键指标与平台状态'],
+  ['accounts','平台账号','云平台API授权管理'],
+  ['domains','域名池','域名聚合与价格管理'],
+  ['records','解析出租','二级域名记录与租户'],
+  ['orders','支付订单','订单与手动补单'],
+  ['tenantUsers','用户管理','注册用户与账号状态'],
+  ['userNotices','用户通知','发布前台用户公告与消息'],
+  ['users','权限日志','角色用户与审计日志'],
+  ['settings','系统设置','同步周期与易支付参数']
+];
+
+// ==================== 工具函数 ====================
+function $(s,r){return(r||document).querySelector(s)}
+function $$(s,r){return Array.from((r||document).querySelectorAll(s))}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function money(n){return '¥'+Number(n||0).toFixed(2)}
+function parseDate(v){const d=v?new Date(String(v).replace(' ','T')):null;return d&&Number.isFinite(d.getTime())?d:null}
+function paidAt(o){return parseDate(o.paidAt||o.paid_at||o.createdAt||o.created_at)}
+function paidRevenue(days){
+  const stats=S.data.dashboardStats||{};
+  const statKey=days===1?'revenueToday':(days===7?'revenue7Days':(days===30?'revenue30Days':(!days?'revenueTotal':'')));
+  if(statKey&&stats[statKey]!==undefined&&stats[statKey]!==null) return Number(stats[statKey]||0);
+  const paid=(S.data.orders||[]).filter(o=>o.status==='paid');
+  if(!days) return paid.reduce((s,o)=>s+Number(o.amount||0),0);
+  const start=new Date();start.setHours(0,0,0,0);start.setDate(start.getDate()-days+1);
+  return paid.filter(o=>{const d=paidAt(o);return d&&d>=start;}).reduce((s,o)=>s+Number(o.amount||0),0);
+}
+function pName(p){return{aliyun:'阿里云',tencent:'腾讯云'}[p]||p}
+function platformOptions(){
+  return [['aliyun','阿里云DNS'],['tencent','腾讯云DNSPod']];
+}
+function dnsRecordOptions(){
+  return [['A','A'],['AAAA','AAAA'],['CNAME','CNAME'],['MX','MX'],['TXT','TXT'],['NS','NS'],['SRV','SRV'],['CAA','CAA']];
+}
+function badge(text,cls){return '<span class="badge '+(cls||'')+'">'+esc(text)+'</span>'}
+function toast(msg){const d=document.createElement('div');d.className='toast';d.textContent=msg;$('#toasts').appendChild(d);setTimeout(()=>d.remove(),3000)}
+
+// API 请求 - 带完善的错误处理
+async function api(path, opts={}){
+  const headers = {'Content-Type':'application/json'};
+  if(S.token && !path.includes('/api/login')) headers['Authorization'] = 'Bearer '+S.token;
+  const request = async target => {
+    const r = await fetch(target, {...opts, headers:{...headers,...(opts.headers||{})}});
+    const text = await r.text();
+    let data;
+    try{ data = JSON.parse(text); }
+    catch(e){
+      const err = new Error('服务器返回非JSON: '+text.substring(0,100));
+      err.status = r.status;
+      err.nonJson = true;
+      throw err;
+    }
+    if(!r.ok){
+      const err = new Error(data.error||('错误 '+r.status));
+      err.status = r.status;
+      throw err;
+    }
+    return data;
+  };
+  try{
+    return await request(path);
+  }catch(e){
+    if((e.status===404||e.nonJson) && path.startsWith('/api/')){
+      return request('/api.php?route='+encodeURIComponent(path));
+    }
+    if(e.message.includes('Failed to fetch')) throw new Error('网络错误，请检查服务器');
+    throw e;
+  }
+}
+
+// ==================== 登录 ====================
+async function doLogin(){
+  const username = $('#loginUser').value.trim();
+  const password = $('#loginPass').value;
+  const msgEl = $('#loginMsg');
+  msgEl.textContent = '';
+  
+  // 前端校验
+  if(!username){ msgEl.textContent='请输入账号'; $('#loginUser').focus(); return; }
+  if(!password){ msgEl.textContent='请输入密码'; $('#loginPass').focus(); return; }
+  if(username.length<2||username.length>50){ msgEl.textContent='账号长度2-50个字符'; return; }
+  if(password.length<4||password.length>100){ msgEl.textContent='密码长度4-100个字符'; return; }
+  if(!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)){ msgEl.textContent='账号只能包含字母、数字、下划线和中文'; return; }
+  
+  // 禁用按钮防止重复提交
+  const btn = $('#loginBtn');
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+  
+  try{
+    const data = await api('/api/login',{method:'POST',body:JSON.stringify({username,password})});
+    S.token = data.token;
+    S.user = data.user;
+    localStorage.setItem('dns_admin_token', data.token);
+    showAdmin();
+    loadData();
+  }catch(e){
+    msgEl.textContent = e.message;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '登 录';
+  }
+}
+
+function showLogin(){
+  $('#loginPage').style.display = 'flex';
+  $('#adminApp').classList.remove('show');
+}
+
+function showAdmin(){
+  $('#loginPage').style.display = 'none';
+  $('#adminApp').classList.add('show');
+  $('#adminApp').classList.toggle('sidebar-collapsed', S.sidebarCollapsed);
+  if($('#sidebarToggle')){
+    $('#sidebarToggle').title = S.sidebarCollapsed ? '展开侧栏' : '收起侧栏';
+    $('#sidebarToggle').textContent = S.sidebarCollapsed ? '>' : '<';
+  }
+  if(S.user) $('#userName').textContent = S.user.name||S.user.username;
+  renderNav();
+  renderView();
+}
+
+function doLogout(){
+  // 调用后端登出接口
+  if(S.token){
+    api('/api/logout',{method:'POST',body:'{}'}).catch(()=>{});
+  }
+  S.token=''; S.user=null; S.data=null;
+  localStorage.removeItem('dns_admin_token');
+  showLogin();
+}
+
+// ==================== 数据加载 ====================
+async function loadData(silent){
+  try{
+    S.data = await api('/api/bootstrap');
+    applyBrandSettings();
+    renderView();
+  }catch(e){
+    if(e.message.includes('401')||e.message.includes('未登录')||e.message.includes('请先登录')){
+      S.token=''; S.user=null; S.data=null;
+      localStorage.removeItem('dns_admin_token');
+      showLogin();
+      if(!silent) toast('登录已过期，请重新登录');
+    }else{
+      toast('加载数据失败: '+e.message);
+    }
+  }
+}
+
+function applyBrandSettings(){
+  const s=S.data?.settings||{};
+  const iconText=String(s.adminLogoText??s.admin_logo_text??'DNS').trim()||'DNS';
+  const titleText=String(s.adminBrandName??s.admin_brand_name??'分发出租').trim()||'分发出租';
+  const systemName=String(s.systemName??s.system_name??'DNS二级域名管理系统').trim()||'DNS二级域名管理系统';
+  const iconEl=$('#brandIconText');
+  const titleEl=$('#brandTitleText');
+  if(iconEl) iconEl.textContent=iconText;
+  if(titleEl) titleEl.textContent=titleText;
+  document.title=systemName;
+}
+
+// ==================== 导航 ====================
+function renderNav(){
+  $('#sideNav').innerHTML = VIEWS.map(v=>
+    '<button class="'+(S.view===v[0]?'active':'')+'" data-v="'+v[0]+'" data-short="'+esc(v[1].slice(0,1))+'" title="'+esc(v[1])+'"><span>'+v[1]+'</span></button>'
+  ).join('');
+  $$('#sideNav button').forEach(b=>{
+    b.onclick=()=>{S.view=b.dataset.v;S.filter='';renderNav();renderView();}
+  });
+}
+
+// ==================== 视图渲染 ====================
+function renderView(){
+  if(!S.data) return;
+  const info = VIEWS.find(v=>v[0]===S.view)||VIEWS[0];
+  $('#pageTitle').textContent = info[1];
+  $('#pageSub').textContent = info[2];
+  const fn = {dashboard:renderDashboard,accounts:renderAccounts,domains:renderDomains,records:renderRecords,orders:renderOrders,tenantUsers:renderTenantUsers,userNotices:renderUserNotices,users:renderUsers,settings:renderSettings}[S.view] || renderDashboard;
+  $('#viewContent').innerHTML = fn();
+  bindEvents();
+}
+
+function tbl(headers,rows){
+  return '<div class="panel"><div class="panel-body"><table><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div></div>';
+}
+
+function pnl(title,body,actions){
+  return '<div class="panel"><div class="panel-head"><h3>'+title+'</h3><div>'+(actions||'')+'</div></div><div class="panel-body">'+body+'</div></div>';
+}
+
+// ---- 工作台 ----
+function renderDashboard(){
+  const d=S.data;
+  const domains=(d.domains||[]).filter(x=>x.status!=='deleted').length;
+  const records=(d.records||[]).filter(x=>x.status!=='deleted');
+  const rentedDomains=new Set(records.filter(x=>String(x.host||'').trim()&&String(x.value||'').trim()).map(x=>x.domainId||x.domain_id).filter(Boolean)).size;
+  const kpis='<div class="kpis"><div class="kpi"><span>所有域名</span><strong>'+domains+'</strong></div><div class="kpi"><span>解析记录</span><strong>'+records.length+'</strong></div><div class="kpi"><span>已出租域名</span><strong>'+rentedDomains+'</strong></div><div class="kpi"><span>今日收款</span><strong>'+money(paidRevenue(1))+'</strong></div><div class="kpi"><span>七日收款</span><strong>'+money(paidRevenue(7))+'</strong></div><div class="kpi"><span>三十日收款</span><strong>'+money(paidRevenue(30))+'</strong></div><div class="kpi"><span>总收款</span><strong>'+money(paidRevenue(0))+'</strong></div></div>';
+  const accRows=d.platformAccounts.map(a=>'<tr><td>'+esc(a.name)+'</td><td>'+pName(a.platform)+'</td><td>'+badge(a.status==='enabled'?'已启用':'已禁用',a.status==='enabled'?'good':'warn')+'</td><td>'+badge(a.health||'normal',a.health==='normal'?'good':'warn')+'</td><td>'+esc(a.lastSyncAt||'-')+'</td><td><button class="btn btn-secondary js-sync" data-id="'+a.id+'">同步</button></td></tr>');
+  return kpis+pnl('平台接口状态','<table><thead><tr><th>账号</th><th>平台</th><th>状态</th><th>健康</th><th>最后同步</th><th>操作</th></tr></thead><tbody>'+accRows.join('')+'</tbody></table>');
+}
+
+// ---- 平台账号 ----
+function renderAccounts(){
+  const rows=S.data.platformAccounts.map(a=>'<tr><td>'+esc(a.name)+'</td><td>'+pName(a.platform)+'</td><td class="mono">'+esc(a.accessKey)+'</td><td>'+badge(a.status==='enabled'?'已启用':'已禁用',a.status==='enabled'?'good':'warn')+'</td><td>'+esc(a.lastSyncAt||'-')+'</td><td><button class="btn btn-secondary js-edit-acc" data-id="'+a.id+'">编辑</button> <button class="btn btn-secondary js-sync" data-id="'+a.id+'">同步</button> <button class="btn btn-danger js-del-acc" data-id="'+a.id+'">删除</button></td></tr>');
+  return pnl('平台账号','<table><thead><tr><th>名称</th><th>平台</th><th>AccessKey</th><th>状态</th><th>最后同步</th><th>操作</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>','<button class="btn btn-primary js-add-acc">新增账号</button>');
+}
+
+// ---- 域名池 ----
+function renderDomains(){
+  const q=S.filter.toLowerCase();
+  const rows=S.data.domains.filter(d=>!q||d.domain.toLowerCase().includes(q)||(d.group||'').toLowerCase().includes(q)).map(d=>'<tr><td class="check-cell"><input type="checkbox" class="js-domain-check" value="'+esc(d.id)+'"></td><td class="mono">'+esc(d.domain)+'</td><td>'+pName(d.platform)+'</td><td>'+esc(d.group||'-')+'</td><td>'+badge(d.status,d.status==='active'?'good':'warn')+'</td><td>'+money(d.pricePerMonth||29)+'/月</td><td><button class="btn btn-primary js-enable-domain" data-id="'+d.id+'">开启</button> <button class="btn btn-secondary js-edit-domain" data-id="'+d.id+'">编辑</button> <button class="btn btn-danger js-del-domain" data-id="'+d.id+'">删除</button></td></tr>');
+  const toolbar='<div class="toolbar"><input id="filterInput" placeholder="搜索域名或分组" value="'+esc(S.filter)+'"><div class="batch-actions"><button class="btn btn-primary js-domain-enable">批量开启</button><button class="btn btn-secondary js-domain-pause">批量暂停</button><button class="btn btn-secondary js-domain-group">批量分组</button><button class="btn btn-danger js-domain-delete">批量删除</button><button class="btn btn-primary js-add-domain">新增域名</button></div></div>';
+  return toolbar+pnl('域名管理','<table><thead><tr><th class="check-cell"><input type="checkbox" class="js-check-all" data-target="js-domain-check"></th><th>域名</th><th>平台</th><th>分组</th><th>状态</th><th>月租金</th><th>操作</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>');
+}
+
+// ---- 解析出租 ----
+function renderRecords(){
+  const q=S.filter.toLowerCase();
+  const rows=S.data.records.filter(r=>{
+    if(r.status==='deleted') return false;
+    const domainId=r.domainId||r.domain_id;
+    const d=S.data.domains.find(x=>x.id===domainId)||{};
+    const full=(r.host||'')+(d.domain?'.'+d.domain:'');
+    return !q||full.toLowerCase().includes(q);
+  }).map(r=>{
+    const domainId=r.domainId||r.domain_id;
+    const d=S.data.domains.find(x=>x.id===domainId)||{};
+    const rentedTo=r.rentedTo||r.rented_to||'';
+    const expiresAt=r.expiresAt||r.expires_at||'';
+    const statusHtml=badge(r.status,r.status==='enabled'?'good':'warn');
+    return '<tr><td class="check-cell"><input type="checkbox" class="js-record-check" value="'+esc(r.id)+'"></td><td class="mono">'+esc(r.host)+(d.domain?'.'+esc(d.domain):'')+'</td><td>'+esc(d.domain||'-')+'</td><td>'+esc(r.type)+'</td><td>'+esc(r.value)+'</td><td>'+r.ttl+'</td><td>'+statusHtml+'</td><td>'+esc(rentedTo||'-')+'</td><td>'+esc(expiresAt||'-')+'</td><td><button class="btn btn-secondary js-edit-rec" data-id="'+r.id+'">编辑</button> <button class="btn btn-danger js-del-rec" data-id="'+r.id+'">删除</button></td></tr>';
+  });
+  const toolbar='<div class="toolbar"><input id="filterInput" placeholder="搜索二级域名" value="'+esc(S.filter)+'"><div class="batch-actions"><button class="btn btn-secondary js-record-pause">批量暂停</button><button class="btn btn-danger js-record-delete">批量删除</button><button class="btn btn-primary js-add-rec">新增解析</button></div></div>';
+  return toolbar+pnl('DNS解析与出租','<table><thead><tr><th class="check-cell"><input type="checkbox" class="js-check-all" data-target="js-record-check"></th><th>二级域名</th><th>所属域名</th><th>类型</th><th>记录值</th><th>TTL</th><th>状态</th><th>租户</th><th>到期时间</th><th>操作</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>');
+}
+
+// ---- 支付订单 ----
+function renderOrders(){
+  const rows=S.data.orders.map(o=>{
+    const tradeNo = o.tradeNo || o.trade_no || '-';
+    const createdAt = o.createdAt || o.created_at || '-';
+    return '<tr><td class="mono">'+esc(tradeNo)+'</td><td>'+esc(o.subject)+'</td><td>'+esc(o.customer)+'</td><td>'+money(o.amount)+'</td><td>'+badge(o.status,o.status==='paid'?'good':'warn')+'</td><td>'+esc(createdAt)+'</td><td>'+(o.status!=='paid'?'<button class="btn btn-secondary js-mark-paid" data-id="'+o.id+'">补单</button>':'')+'</td></tr>';
+  });
+  return pnl('订单管理','<table><thead><tr><th>订单号</th><th>商品</th><th>客户</th><th>金额</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>','<button class="btn btn-primary js-add-order">创建订单</button>');
+}
+
+// ---- 用户管理 ----
+function renderTenantUsers(){
+  const q=S.filter.toLowerCase();
+  const list=(S.data.tenantUsers||[]).filter(u=>!q||String(u.username||'').toLowerCase().includes(q)||String(u.name||'').toLowerCase().includes(q)||String(u.contact||'').toLowerCase().includes(q)||String(u.email||'').toLowerCase().includes(q)||String(u.phone||'').toLowerCase().includes(q));
+  const rows=list.map(u=>{
+    const status=u.status||'enabled';
+    const statusText=status==='disabled'?'已禁用':(status==='deleted'?'已删除':'已启用');
+    const statusClass=status==='enabled'?'good':(status==='disabled'?'warn':'bad');
+    const contact=u.contact||u.email||u.phone||'-';
+    const created=u.created_at||u.createdAt||'-';
+    const toggle=status==='enabled'
+      ? '<button class="btn btn-secondary js-disable-tenant" data-username="'+esc(u.username)+'">禁用</button>'
+      : '<button class="btn btn-primary js-enable-tenant" data-username="'+esc(u.username)+'">启用</button>';
+    return '<tr><td class="mono">'+esc(u.username)+'</td><td>'+esc(u.name||'-')+'</td><td>'+esc(contact)+'</td><td>'+Number(u.credits||0).toFixed(0)+'</td><td>'+badge(statusText,statusClass)+'</td><td>'+esc(created)+'</td><td><button class="btn btn-secondary js-edit-tenant" data-username="'+esc(u.username)+'">编辑</button> '+toggle+' <button class="btn btn-danger js-del-tenant" data-username="'+esc(u.username)+'">删除</button></td></tr>';
+  });
+  const body=rows.length?rows.join(''):'<tr><td colspan="7" class="muted-text">暂无注册用户</td></tr>';
+  const toolbar='<div class="toolbar"><input id="filterInput" placeholder="搜索账号、姓名或联系方式" value="'+esc(S.filter)+'"><div class="batch-actions"><button class="btn btn-secondary" type="button" onclick="loadData()">刷新</button></div></div>';
+  return toolbar+pnl('注册用户','<table><thead><tr><th>账号</th><th>姓名/企业</th><th>联系方式</th><th>积分</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead><tbody>'+body+'</tbody></table>');
+}
+
+
+
+function noticeLevelText(level){
+  return {info:'通知',success:'公告',warning:'提醒',danger:'重要'}[level]||level||'通知';
+}
+
+function noticeStatusText(status){
+  return status==='inactive'?'已下架':'已发布';
+}
+
+function renderUserNotices(){
+  const q=S.filter.toLowerCase();
+  const notices=Array.isArray(S.data.settings?.userNotices)?S.data.settings.userNotices:[];
+  const list=notices.filter(n=>!q||String(n.title||'').toLowerCase().includes(q)||String(n.body||'').toLowerCase().includes(q)||String(n.status||'').toLowerCase().includes(q));
+  const rows=list.map(n=>{
+    const status=n.status||'active';
+    const actions='<button class="btn btn-secondary js-edit-notice" data-id="'+esc(n.id)+'">编辑</button> '
+      +(status==='active'
+        ? '<button class="btn btn-secondary js-toggle-notice" data-id="'+esc(n.id)+'" data-status="inactive">下架</button> '
+        : '<button class="btn btn-primary js-toggle-notice" data-id="'+esc(n.id)+'" data-status="active">发布</button> ')
+      +'<button class="btn btn-danger js-del-notice" data-id="'+esc(n.id)+'">删除</button>';
+    return '<tr><td>'+esc(n.title||'-')+'</td><td>'+badge(noticeLevelText(n.level),n.level==='danger'?'bad':(n.level==='warning'?'warn':'good'))+'</td><td>'+badge(noticeStatusText(status),status==='active'?'good':'warn')+'</td><td>'+esc(String(n.body||'').slice(0,80))+'</td><td>'+esc(n.createdAt||'-')+'</td><td>'+actions+'</td></tr>';
+  });
+  const body=rows.length?rows.join(''):'<tr><td colspan="6" class="muted-text">暂无用户通知</td></tr>';
+  const toolbar='<div class="toolbar"><input id="filterInput" placeholder="搜索标题、内容或状态" value="'+esc(S.filter)+'"><div class="batch-actions"><button class="btn btn-primary js-add-notice" type="button">发布通知</button><button class="btn btn-secondary" type="button" onclick="loadData()">刷新</button></div></div>';
+  return toolbar+pnl('用户消息通知','<table><thead><tr><th>标题</th><th>类型</th><th>状态</th><th>内容摘要</th><th>发布时间</th><th>操作</th></tr></thead><tbody>'+body+'</tbody></table>');
+}
+
+function saveUserNotices(notices){
+  return api('/api/settings',{method:'PATCH',body:JSON.stringify({userNotices:notices})}).then(()=>loadData());
+}
+
+function noticeFormFields(n){
+  return formFields([
+    {label:'通知标题',name:'title',value:n?.title||'',full:true},
+    {label:'通知类型',name:'level',type:'select',value:n?.level||'info',options:[['info','通知'],['success','公告'],['warning','提醒'],['danger','重要']]},
+    {label:'状态',name:'status',type:'select',value:n?.status||'active',options:[['active','发布'],['inactive','下架']]},
+    {label:'通知内容',name:'body',type:'textarea',value:n?.body||'',placeholder:'填写要展示给用户的消息内容',full:true}
+  ]);
+}
+
+function openNoticeModal(notice){
+  openModal(notice?'编辑用户通知':'发布用户通知',noticeFormFields(notice),data=>{
+    const notices=Array.isArray(S.data.settings?.userNotices)?[...S.data.settings.userNotices]:[];
+    const now=new Date().toISOString().slice(0,19).replace('T',' ');
+    const title=String(data.title||'').trim();
+    const body=String(data.body||'').trim();
+    if(!title) throw new Error('请填写通知标题');
+    if(!body) throw new Error('请填写通知内容');
+    if(notice){
+      const idx=notices.findIndex(n=>n.id===notice.id);
+      if(idx>=0) notices[idx]={...notices[idx],title,body,level:data.level||'info',status:data.status||'active',updatedAt:now};
+    }else{
+      notices.unshift({id:'nt'+Date.now()+Math.floor(Math.random()*1000),title,body,level:data.level||'info',status:data.status||'active',createdAt:now,updatedAt:now});
+    }
+    return saveUserNotices(notices);
+  });
+}
+
+
+// ---- 权限日志 ----
+function renderUsers(){
+  const uRows=S.data.users.map(u=>'<tr><td>'+esc(u.username)+'</td><td>'+esc(u.name)+'</td><td>'+esc(u.role)+'</td><td>'+badge(u.status,u.status==='enabled'?'good':'warn')+'</td><td><button class="btn btn-secondary js-edit-user" data-id="'+u.id+'">编辑</button> <button class="btn btn-danger js-del-user" data-id="'+u.id+'" data-name="'+esc(u.username)+'">删除</button></td></tr>');
+  const logs=S.data.logs||[];
+  const perPage=10;
+  const totalPages=Math.max(1, Math.ceil(logs.length/perPage));
+  S.logPage=Math.min(Math.max(1, S.logPage||1), totalPages);
+  const start=(S.logPage-1)*perPage;
+  const lRows=logs.slice(start,start+perPage).map(l=>'<tr><td>'+esc(l.createdAt)+'</td><td>'+esc(l.username)+'</td><td>'+esc(l.action)+'</td><td>'+badge(l.result,l.result==='success'?'good':'bad')+'</td><td>'+esc(l.detail)+'</td></tr>');
+  const pager='<div class="toolbar" style="justify-content:flex-end;margin-top:12px"><button class="btn btn-secondary js-log-page" data-page="'+(S.logPage-1)+'" '+(S.logPage<=1?'disabled':'')+'>上一页</button><span class="muted">第 '+S.logPage+' / '+totalPages+' 页，共 '+logs.length+' 条</span><button class="btn btn-secondary js-log-page" data-page="'+(S.logPage+1)+'" '+(S.logPage>=totalPages?'disabled':'')+'>下一页</button></div>';
+  return '<div class="grid-2">'+pnl('管理员','<div class="toolbar"><button class="btn btn-primary js-add-user">新增管理员</button></div><table><thead><tr><th>账号</th><th>姓名</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody>'+uRows.join('')+'</tbody></table>')+pnl('审计日志','<table><thead><tr><th>时间</th><th>用户</th><th>动作</th><th>结果</th><th>详情</th></tr></thead><tbody>'+lRows.join('')+'</tbody></table>'+pager)+'</div>';
+}
+
+// ---- 系统设置 ----
+function renderSettings(){
+  const s=S.data.settings||{};
+  const epay=s.epay||{};
+  const systemName=s.systemName??s.system_name??'DNS二级域名分发系统';
+  const adminLogoText=s.adminLogoText??s.admin_logo_text??'DNS';
+  const adminBrandName=s.adminBrandName??s.admin_brand_name??'分发出租';
+  const syncInterval=s.syncIntervalSeconds??s.sync_interval_seconds??300;
+  const siteLogoUrl=s.siteLogoUrl||'';
+  const homeImageUrl=s.homeImageUrl||'';
+  const authImageUrl=s.authImageUrl||'';
+  const defaultAvatarUrl=s.defaultAvatarUrl||'';
+  const hasKey=!!(epay.hasKey||epay.key);
+  const keyValue=hasKey?'******':'';
+  const keyPlaceholder=hasKey?'已保存，留空或保持星号不修改':'请输入易支付密钥';
+  return pnl('系统设置','<div class="form-grid"><label>系统名称<input id="sName" value="'+esc(systemName)+'"></label><label>同步周期(秒)<input id="sSync" type="number" value="'+esc(syncInterval)+'"></label><label>后台左上角图标文字<input id="sAdminLogoText" value="'+esc(adminLogoText)+'" placeholder="例如 DNS"></label><label>后台左上角标题<input id="sAdminBrandName" value="'+esc(adminBrandName)+'" placeholder="例如 分发出租"></label><label class="full">用户默认头像地址<input id="sDefaultAvatarUrl" value="'+esc(defaultAvatarUrl)+'" placeholder="留空使用默认头像图标，填写图片URL后未上传头像的用户自动使用"></label><label class="full">首页Logo图片地址<input id="sLogoUrl" value="'+esc(siteLogoUrl)+'" placeholder="留空使用默认DNS标识，填写图片URL后首页自动替换"></label><label class="full">首页主图地址<input id="sHomeImageUrl" value="'+esc(homeImageUrl)+'" placeholder="留空使用默认蓝色主图，填写图片URL后首页自动替换"></label><label class="full">注册登录页图片地址<input id="sAuthImageUrl" value="'+esc(authImageUrl)+'" placeholder="留空使用默认蓝色背景，填写图片URL后注册/登录页自动替换"></label><label>易支付商户ID<input id="sPid" value="'+esc(epay.pid||'')+'"></label><label>易支付网关<input id="sGateway" value="'+esc(epay.gateway||'')+'"></label><label>易支付密钥<input id="sKey" value="'+keyValue+'" placeholder="'+keyPlaceholder+'"></label><label>回调IP白名单<input id="sIp" value="'+esc(epay.notifyIpWhitelist||'')+'"></label></div>','<button type="button" class="btn btn-primary js-save-settings">保存设置</button>');
+}
+
+// ==================== 弹窗 ====================
+function openModal(title, html, action){
+  $('#modalTitle').textContent=title;
+  $('#modalBody').innerHTML=html;
+  _modalAction=action||null;
+  $('#modalOverlay').classList.add('show');
+}
+function closeModal(){$('#modalOverlay').classList.remove('show')}
+
+function formFields(fields){
+  return '<div class="form-grid">'+fields.map(f=>{
+    const cls=f.full?' class="full"':'';
+    let input;
+    if(f.type==='select') input='<select name="'+f.name+'">'+f.options.map(o=>'<option value="'+esc(o[0])+'"'+(String(f.value)===String(o[0])?' selected':'')+'>'+esc(o[1])+'</option>').join('')+'</select>';
+    else if(f.type==='textarea') input='<textarea name="'+f.name+'" placeholder="'+esc(f.placeholder||'')+'">'+esc(f.value||'')+'</textarea>';
+    else input='<input name="'+f.name+'" type="'+(f.type||'text')+'" value="'+esc(f.value||'')+'" placeholder="'+esc(f.placeholder||'')+'">';
+    return '<label'+cls+'>'+f.label+input+'</label>';
+  }).join('')+'</div>';
+}
+
+function getFormData(){
+  const data={};
+  $$('#modalBody input, #modalBody select, #modalBody textarea').forEach(el=>{
+    data[el.name]=el.type==='number'?Number(el.value):el.value;
+  });
+  return data;
+}
+
+// ==================== 事件绑定 ====================
+function bindEvents(){
+  // 筛选
+  const fi=$('#filterInput');
+  if(fi) fi.oninput=e=>{S.filter=e.target.value;renderView();};
+  $('#pathDomainFilter')?.addEventListener('change',e=>{S.pathFilters.domain=e.target.value;renderView();});
+  $('#pathUserFilter')?.addEventListener('change',e=>{S.pathFilters.user=e.target.value;renderView();});
+  $('#pathStatusFilter')?.addEventListener('change',e=>{S.pathFilters.status=e.target.value;renderView();});
+  $('#sidebarToggle')?.addEventListener('click',()=>{
+    S.sidebarCollapsed=!S.sidebarCollapsed;
+    localStorage.setItem('dns_sidebar_collapsed', S.sidebarCollapsed ? '1' : '0');
+    $('#adminApp').classList.toggle('sidebar-collapsed', S.sidebarCollapsed);
+    $('#sidebarToggle').title = S.sidebarCollapsed ? '展开侧栏' : '收起侧栏';
+    $('#sidebarToggle').textContent = S.sidebarCollapsed ? '>' : '<';
+  });
+
+  // 批量选择
+  $$('.js-check-all').forEach(b=>b.onchange=()=>{
+    $$('.'+b.dataset.target).forEach(item=>{item.checked=b.checked;});
+  });
+  $('.js-apply-path')?.addEventListener('click',()=>{
+    S.path=normalizeCheckPath($('#pathInput')?.value||'/');
+    renderView();
+  });
+  $('#pathInput')?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      S.path=normalizeCheckPath(e.target.value);
+      renderView();
+    }
+  });
+  $$('.js-open-url').forEach(b=>b.onclick=()=>window.open(b.dataset.url,'_blank','noopener'));
+  $$('.js-copy-url').forEach(b=>b.onclick=async()=>{
+    try{
+      await navigator.clipboard.writeText(b.dataset.url);
+      toast('链接已复制');
+    }catch(e){
+      prompt('复制链接',b.dataset.url);
+    }
+  });
+  $('.js-domain-enable')?.addEventListener('click',()=>batchOperate('domain','enable'));
+  $('.js-domain-pause')?.addEventListener('click',()=>batchOperate('domain','pause'));
+  $('.js-domain-group')?.addEventListener('click',()=>batchGroupDomains());
+  $('.js-domain-delete')?.addEventListener('click',()=>batchOperate('domain','delete'));
+  $('.js-record-pause')?.addEventListener('click',()=>batchOperate('record','pause'));
+  $('.js-record-delete')?.addEventListener('click',()=>batchOperate('record','delete'));
+
+  $$('.js-edit-tenant').forEach(b=>b.onclick=()=>{
+    const u=(S.data.tenantUsers||[]).find(x=>x.username===b.dataset.username);
+    if(!u) return;
+    openModal('编辑注册用户',formFields([
+      {label:'账号',name:'username',value:u.username},
+      {label:'姓名/企业',name:'name',value:u.name||''},
+      {label:'联系方式',name:'contact',value:u.contact||''},
+      {label:'手机号',name:'phone',value:u.phone||''},
+      {label:'邮箱',name:'email',value:u.email||''},
+      {label:'积分数量',name:'credits',type:'number',value:Number(u.credits||0).toFixed(0)},
+      {label:'新密码',name:'newPassword',type:'password',placeholder:'留空不修改'},
+      {label:'状态',name:'status',type:'select',value:u.status||'enabled',options:[['enabled','启用'],['disabled','禁用']]}
+    ]),data=>api('/api/tenant-users/'+encodeURIComponent(u.username),{method:'PATCH',body:JSON.stringify(data)}));
+  });
+  $$('.js-enable-tenant').forEach(b=>b.onclick=()=>{
+    api('/api/tenant-users/'+encodeURIComponent(b.dataset.username),{method:'PATCH',body:JSON.stringify({status:'enabled'})}).then(()=>{loadData();toast('账号已启用');}).catch(e=>toast(e.message));
+  });
+  $$('.js-disable-tenant').forEach(b=>b.onclick=()=>{
+    api('/api/tenant-users/'+encodeURIComponent(b.dataset.username),{method:'PATCH',body:JSON.stringify({status:'disabled'})}).then(()=>{loadData();toast('账号已禁用');}).catch(e=>toast(e.message));
+  });
+  $$('.js-del-tenant').forEach(b=>b.onclick=()=>{
+    if(!confirm('确定删除该注册用户？积分流水会保留，账号将不再显示。')) return;
+    api('/api/tenant-users/'+encodeURIComponent(b.dataset.username),{method:'DELETE'}).then(()=>{loadData();toast('账号已删除');}).catch(e=>toast(e.message));
+  });
+
+  // 管理员管理
+  $('.js-add-user')?.addEventListener('click',()=>openModal('新增管理员',formFields([
+    {label:'用户名',name:'username',placeholder:'登录账号'},
+    {label:'密码',name:'password',type:'password',placeholder:'至少 6 位'},
+    {label:'姓名',name:'name',placeholder:'显示名称'},
+    {label:'角色',name:'role',type:'select',value:'admin',options:[['super_admin','超级管理员'],['admin','管理员']]},
+  ]),data=>api('/api/users',{method:'POST',body:JSON.stringify(data)})));
+  $$('.js-edit-user').forEach(b=>b.onclick=()=>{
+    const u=S.data.users.find(x=>String(x.id)===String(b.dataset.id));
+    if(!u) return;
+    openModal('编辑管理员',formFields([
+      {label:'姓名',name:'name',value:u.name||''},
+      {label:'新密码',name:'password',type:'password',placeholder:'留空不修改'},
+      {label:'角色',name:'role',type:'select',value:u.role,options:[['super_admin','超级管理员'],['admin','管理员']]},
+      {label:'状态',name:'status',type:'select',value:u.status||'enabled',options:[['enabled','启用'],['disabled','禁用']]}
+    ]),data=>api('/api/users/'+u.id,{method:'PATCH',body:JSON.stringify(data)}));
+  });
+  $$('.js-del-user').forEach(b=>b.onclick=()=>{
+    if(!confirm('确定删除管理员 '+b.dataset.name+'？')) return;
+    api('/api/users/'+b.dataset.id,{method:'DELETE'}).then(()=>{loadData();toast('管理员已删除');}).catch(e=>toast(e.message));
+  });
+  $$('.js-log-page').forEach(b=>b.onclick=()=>{
+    S.logPage=Number(b.dataset.page||1);
+    renderView();
+  });
+
+  $('.js-add-notice')?.addEventListener('click',()=>openNoticeModal(null));
+  $$('.js-edit-notice').forEach(b=>b.onclick=()=>{const n=(S.data.settings?.userNotices||[]).find(x=>x.id===b.dataset.id); if(n) openNoticeModal(n);});
+  $$('.js-toggle-notice').forEach(b=>b.onclick=()=>{const notices=(S.data.settings?.userNotices||[]).map(n=>n.id===b.dataset.id?{...n,status:b.dataset.status,updatedAt:new Date().toISOString().slice(0,19).replace('T',' ')}:n); saveUserNotices(notices).then(()=>toast(b.dataset.status==='active'?'通知已发布':'通知已下架')).catch(e=>toast(e.message));});
+  $$('.js-del-notice').forEach(b=>b.onclick=()=>{if(!confirm('确定删除该通知？')) return; const notices=(S.data.settings?.userNotices||[]).filter(n=>n.id!==b.dataset.id); saveUserNotices(notices).then(()=>toast('通知已删除')).catch(e=>toast(e.message));});
+  
+  // 同步
+  $$('.js-sync').forEach(b=>b.onclick=()=>{
+    const btn=b;btn.textContent='同步中...';btn.disabled=true;
+    api('/api/platform-accounts/'+b.dataset.id+'/sync',{method:'POST',body:'{}'}).then(d=>{
+      loadData();
+      if(d.success===false){
+        toast('同步失败：'+(d.error||'未知错误'));
+      }else{
+        toast('同步完成：获取'+(d.totalFetched??0)+'个域名，新增'+(d.addedCount??0)+'个');
+      }
+    }).catch(e=>toast('同步失败：'+e.message)).finally(()=>{btn.textContent='同步';btn.disabled=false;});
+  });
+  
+  // 新增账号
+  $('.js-add-acc')?.addEventListener('click',()=>openModal('新增平台账号',formFields([
+    {label:'账号名称',name:'name'},{label:'平台',name:'platform',type:'select',value:'aliyun',options:platformOptions()},{label:'AccessKey',name:'accessKey'},{label:'SecretKey',name:'secretKey',placeholder:'必填'},{label:'状态',name:'status',type:'select',value:'enabled',options:[['enabled','启用'],['disabled','禁用']]}
+  ]),data=>api('/api/platform-accounts',{method:'POST',body:JSON.stringify(data)})));
+  
+  // 编辑账号
+  $$('.js-edit-acc').forEach(b=>b.onclick=()=>{
+    const a=S.data.platformAccounts.find(x=>x.id===b.dataset.id);
+    const hasSecret = a.hasSecret || false;
+    openModal('编辑平台账号',formFields([
+      {label:'账号名称',name:'name',value:a.name},{label:'平台',name:'platform',type:'select',value:a.platform,options:platformOptions()},{label:'AccessKey',name:'accessKey',value:a.accessKey},{label:'SecretKey',name:'secretKey',value:hasSecret?'******':'',placeholder:hasSecret?'已设置，留空不修改':'留空不修改'},{label:'状态',name:'status',type:'select',value:a.status,options:[['enabled','启用'],['disabled','禁用']]}
+    ]),data=>api('/api/platform-accounts/'+a.id,{method:'PATCH',body:JSON.stringify(data)}));
+  });
+
+  // 删除账号
+  $$('.js-del-acc').forEach(b=>b.onclick=()=>{
+    const a=S.data.platformAccounts.find(x=>x.id===b.dataset.id);
+    if(!a||!confirm('确定删除平台账号“'+a.name+'”？')) return;
+    api('/api/platform-accounts/'+a.id,{method:'DELETE'}).then(()=>{loadData();toast('平台账号已删除');}).catch(e=>toast(e.message));
+  });
+  
+  // 新增域名
+  $('.js-add-domain')?.addEventListener('click',()=>openModal('新增域名',formFields([
+    {label:'域名',name:'domain'},{label:'平台账号',name:'platformAccountId',type:'select',options:S.data.platformAccounts.map(a=>[a.id,a.name+' / '+pName(a.platform)])},{label:'分组',name:'group'},{label:'状态',name:'status',type:'select',value:'active',options:[['active','正常'],['paused','暂停'],['expired','过期']]},{label:'月租金(元)',name:'pricePerMonth',type:'number',value:29},{label:'备注',name:'remark',full:true}
+  ]),data=>api('/api/domains',{method:'POST',body:JSON.stringify(data)})));
+  
+  // 编辑域名
+  $$('.js-edit-domain').forEach(b=>b.onclick=()=>{
+    const d=S.data.domains.find(x=>x.id===b.dataset.id);
+    openModal('编辑域名',formFields([
+      {label:'域名',name:'domain',value:d.domain},{label:'分组',name:'group',value:d.group},{label:'状态',name:'status',type:'select',value:d.status,options:[['active','正常'],['paused','暂停'],['expired','过期']]},{label:'月租金(元)',name:'pricePerMonth',type:'number',value:d.pricePerMonth||29},{label:'备注',name:'remark',value:d.remark,full:true}
+    ]),data=>api('/api/domains/'+d.id,{method:'PATCH',body:JSON.stringify(data)}));
+  });
+
+  // 开启域名
+  $$('.js-enable-domain').forEach(b=>b.onclick=()=>{
+    api('/api/domains/'+b.dataset.id,{method:'PATCH',body:JSON.stringify({status:'active'})}).then(()=>{loadData();toast('已开启');}).catch(e=>toast(e.message));
+  });
+
+  // 删除域名
+  $$('.js-del-domain').forEach(b=>b.onclick=()=>{
+    if(!confirm('确定删除该域名？删除后前台将不再展示。')) return;
+    api('/api/domains/'+b.dataset.id,{method:'DELETE'}).then(()=>{loadData();toast('已删除');}).catch(e=>toast(e.message));
+  });
+  
+  // 新增解析
+  $('.js-add-rec')?.addEventListener('click',()=>openModal('新增解析记录',formFields([
+    {label:'所属域名',name:'domainId',type:'select',options:S.data.domains.map(d=>[d.id,d.domain])},{label:'主机记录',name:'host',placeholder:'www 或 tenant001'},{label:'记录类型',name:'type',type:'select',value:'CNAME',options:dnsRecordOptions()},{label:'记录值',name:'value',placeholder:'A填IP，CNAME填域名，MX可填 10 mail.example.com'},{label:'TTL',name:'ttl',type:'number',value:600},{label:'状态',name:'status',type:'select',value:'enabled',options:[['enabled','启用'],['paused','暂停']]}
+  ]),data=>api('/api/records',{method:'POST',body:JSON.stringify(data)})));
+  
+  // 编辑解析
+  $$('.js-edit-rec').forEach(b=>b.onclick=()=>{
+    const r=S.data.records.find(x=>x.id===b.dataset.id);
+    const domainId = r.domainId || r.domain_id;
+    openModal('编辑解析记录',formFields([
+      {label:'所属域名',name:'domainId',type:'select',value:domainId,options:S.data.domains.map(d=>[d.id,d.domain])},{label:'主机记录',name:'host',value:r.host},{label:'记录类型',name:'type',type:'select',value:r.type||'CNAME',options:dnsRecordOptions()},{label:'记录值',name:'value',value:r.value},{label:'TTL',name:'ttl',type:'number',value:r.ttl},{label:'状态',name:'status',type:'select',value:r.status,options:[['enabled','启用'],['paused','暂停']]},{label:'租户',name:'rentedTo',value:r.rentedTo||r.rented_to}
+    ]),data=>api('/api/records/'+r.id,{method:'PATCH',body:JSON.stringify(data)}));
+  });
+
+  // 删除解析
+  $$('.js-del-rec').forEach(b=>b.onclick=()=>{
+    if(!confirm('确定删除该解析记录？')) return;
+    api('/api/records/'+b.dataset.id,{method:'DELETE'}).then(()=>{loadData();toast('已删除');}).catch(e=>toast(e.message));
+  });
+  
+  // 补单
+  $$('.js-mark-paid').forEach(b=>b.onclick=()=>{
+    api('/api/orders/'+b.dataset.id+'/mark-paid',{method:'POST',body:'{}'}).then(()=>{loadData();toast('补单完成');}).catch(e=>toast(e.message));
+  });
+  
+  // 创建订单
+  $('.js-add-order')?.addEventListener('click',()=>openModal('创建订单',formFields([
+    {label:'商品',name:'subject',value:'二级域名租赁套餐'},{label:'金额',name:'amount',type:'number',value:199},{label:'客户',name:'customer'}
+  ]),data=>api('/api/orders',{method:'POST',body:JSON.stringify(data)})));
+
+  $('.js-save-settings')?.addEventListener('click',event=>{
+    event.preventDefault();
+    const btn=event.currentTarget;
+    const epay={pid:$('#sPid').value.trim(),gateway:$('#sGateway').value.trim(),notifyIpWhitelist:$('#sIp').value.trim()};
+    const key=$('#sKey').value.trim();
+    if(key && key!=='******') epay.key=key;
+    btn.disabled=true;
+    btn.textContent='保存中...';
+    const settingsPayload={
+      systemName:$('#sName').value.trim(),
+      adminLogoText:$('#sAdminLogoText').value.trim(),
+      adminBrandName:$('#sAdminBrandName').value.trim(),
+      syncIntervalSeconds:Number($('#sSync').value),
+      defaultAvatarUrl:$('#sDefaultAvatarUrl').value.trim(),
+      siteLogoUrl:$('#sLogoUrl').value.trim(),
+      homeImageUrl:$('#sHomeImageUrl').value.trim(),
+      authImageUrl:$('#sAuthImageUrl').value.trim(),
+      epay
+    };
+    api('/api/settings',{method:'PATCH',body:JSON.stringify(settingsPayload)}).then(()=>{loadData();toast('设置已保存');}).catch(e=>toast(e.message)).finally(()=>{btn.disabled=false;btn.textContent='保存设置';});
+  });
+}
+
+async function batchOperate(kind, action){
+  const selector = kind === 'domain' ? '.js-domain-check:checked' : '.js-record-check:checked';
+  const ids = $$(selector).map(item=>item.value).filter(Boolean);
+  if(!ids.length){toast('请先勾选要操作的数据');return;}
+  const label = kind === 'domain' ? '域名' : '解析记录';
+  const actionText = action === 'enable' ? '开启' : (action === 'pause' ? '暂停' : '删除');
+  if(!confirm('确定批量'+actionText+'选中的 '+ids.length+' 条'+label+'？')) return;
+  try{
+    for(const id of ids){
+      if(kind === 'domain'){
+        if(action === 'enable') await api('/api/domains/'+id,{method:'PATCH',body:JSON.stringify({status:'active'})});
+        else if(action === 'pause') await api('/api/domains/'+id,{method:'PATCH',body:JSON.stringify({status:'paused'})});
+        else await api('/api/domains/'+id,{method:'DELETE'});
+      }else{
+        if(action === 'pause') await api('/api/records/'+id,{method:'PATCH',body:JSON.stringify({status:'paused'})});
+        else await api('/api/records/'+id,{method:'DELETE'});
+      }
+    }
+    await loadData(true);
+    toast('批量'+actionText+'完成');
+  }catch(e){
+    toast('批量操作失败: '+e.message);
+    loadData(true);
+  }
+}
+
+async function batchGroupDomains(){
+  const ids = $$('.js-domain-check:checked').map(item=>item.value).filter(Boolean);
+  if(!ids.length){toast('请先勾选要分组的域名');return;}
+  const groupName = prompt('请输入新的分组名称');
+  if(groupName === null) return;
+  const group = groupName.trim();
+  if(!group){toast('分组名称不能为空');return;}
+  try{
+    for(const id of ids){
+      await api('/api/domains/'+id,{method:'PATCH',body:JSON.stringify({group})});
+    }
+    await loadData(true);
+    toast('批量分组完成');
+  }catch(e){
+    toast('批量分组失败: '+e.message);
+    loadData(true);
+  }
+}
+
+// ==================== 弹窗保存 ====================
+let _modalAction = null;
+
+$('#modalSave').onclick=async()=>{
+  const data=getFormData();
+  try{
+    if(_modalAction){
+      await _modalAction(data);
+    }
+    closeModal();
+    loadData();
+    toast('保存成功');
+  }catch(e){
+    toast('保存失败: '+e.message);
+  }
+};
+
+$('#modalCancel').onclick=closeModal;
+$('#modalClose').onclick=closeModal;
+$('#modalOverlay').onclick=e=>{if(e.target===$('#modalOverlay'))closeModal();};
+
+// ==================== 初始化 ====================
+$('#loginBtn').onclick=doLogin;
+$('#loginPass').onkeydown=e=>{if(e.key==='Enter')doLogin();};
+$('#logoutBtn').onclick=doLogout;
+$('#refreshBtn').onclick=()=>loadData().then(()=>toast('已刷新'));
+$('#loginUser').value='';
+$('#loginPass').value='';
+
+// 页面加载时：如果有token则静默验证，失败不弹提示直接显示登录页
+if(S.token){
+  showAdmin();
+  loadData(true);
+}
+
+
+</script>
+</body>
+</html>
+

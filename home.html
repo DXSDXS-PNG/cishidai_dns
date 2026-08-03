@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<!-- 作者D先生微信（二次开发/开通域名违规检测功能/程序定制）：A1565182 -->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="二级域名租用平台，提供稳定的二级域名租赁、积分充值、自助解析和到期管理服务。">
+  <meta name="keywords" content="二级域名,域名租用,自助解析,积分租赁,DNS解析">
+  <title>二级域名租用平台 - 自助解析与租赁</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;touch-action:manipulation}
+    body{font-family:"Segoe UI","Microsoft YaHei",Arial,sans-serif;background:#eef6ff;color:#172033;overflow-x:hidden}
+    body.home-initializing .home{opacity:0}
+    a{text-decoration:none;color:inherit}
+    .home{min-height:100vh;background:linear-gradient(180deg,#eef6ff 0%,#f8fbff 62%,#fff 100%)}
+    .wrap{width:min(1160px,calc(100% - 40px));margin:0 auto}
+    .nav{height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:900;color:#132037}
+    .mark{width:38px;height:38px;border-radius:10px;background:#2f87ff;color:#fff;display:grid;place-items:center;font-weight:900}
+    .brand-logo{width:38px;height:38px;border-radius:10px;object-fit:cover;display:none}
+    .links{display:flex;align-items:center;gap:24px;color:#52647c;font-weight:700}
+    .actions{display:flex;align-items:center;gap:10px}
+    .btn{height:42px;padding:0 18px;border-radius:10px;border:1px solid #d7e2ef;background:#fff;color:#172033;display:inline-flex;align-items:center;justify-content:center;font-weight:800}
+    .btn.primary{border-color:#2f87ff;background:#2f87ff;color:#fff;box-shadow:0 12px 26px rgba(47,135,255,.22)}
+    .hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:44px;align-items:center;padding:62px 0 58px}
+    .kicker{display:inline-flex;align-items:center;gap:8px;color:#12864f;font-weight:900;margin-bottom:18px}
+    .kicker:before{content:"";width:8px;height:8px;border-radius:50%;background:#16c784}
+    h1{font-size:48px;line-height:1.14;margin:0;color:#101828;letter-spacing:0}
+    .lead{font-size:17px;line-height:1.9;color:#53627a;margin:18px 0 0;max-width:620px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+    .hero-actions .btn{height:46px;padding:0 22px}
+    .hero-card{background:#fff;border:1px solid #dfe8f1;border-radius:18px;box-shadow:0 24px 70px rgba(70,91,117,.14);overflow:hidden}
+    .hero-shot{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#248cff,#73d1ff);padding:24px;display:grid;align-content:end;color:#fff;overflow:hidden}
+    .hero-shot.has-image:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,.08),rgba(15,23,42,.46));z-index:1}
+    .hero-shot.has-image .hero-image{display:block}
+    .hero-shot.has-image h2,.hero-shot.has-image p{position:relative;z-index:2}
+    .hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+    .hero-shot h2{font-size:30px;line-height:1.22;margin:0 0 12px}
+    .hero-shot p{margin:0;color:rgba(255,255,255,.9);line-height:1.7}
+    .status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px}
+    .status-row div{background:#f8fbff;border:1px solid #e4edf5;border-radius:10px;padding:14px}
+    .status-row span{display:block;color:#697d96;font-size:13px;font-weight:800;margin-bottom:6px}
+    .status-row strong{font-size:22px;color:#172033}
+    .section{padding:42px 0;border-top:1px solid #e2eaf3}
+    .section h2{font-size:28px;line-height:1.25;margin:0 0 18px;color:#111827}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .card{min-height:148px;background:#fff;border:1px solid #dfe8f3;border-radius:14px;padding:20px;box-shadow:0 10px 24px rgba(80,110,140,.05)}
+    .card strong{display:block;font-size:18px;color:#152033;margin-bottom:10px}
+    .card p{margin:0;color:#5f6f86;font-size:14px;line-height:1.8}
+    .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .step{background:#fff;border:1px solid #dfe8f3;border-radius:14px;padding:20px}
+    .step b{width:34px;height:34px;border-radius:999px;background:#edf5ff;color:#1683ff;display:grid;place-items:center;margin-bottom:12px}
+    .step strong{display:block;font-size:17px;margin-bottom:8px}
+    .step span{display:block;color:#5f6f86;font-size:14px;line-height:1.75}
+    .notice{background:#fff;border:1px solid #dfe8f3;border-radius:14px;padding:20px;color:#5f6f86;line-height:1.8}
+    .footer{padding:28px 0 36px;color:#697890;font-size:13px}
+    @media(max-width:900px){
+      .nav{height:auto;padding:18px 0;align-items:flex-start;flex-direction:column}
+      .links{gap:16px;flex-wrap:wrap}
+      .hero{grid-template-columns:1fr;padding:34px 0 42px}
+      h1{font-size:36px}
+      .grid,.steps{grid-template-columns:1fr}
+    }
+    @media(max-width:520px){
+      .wrap{width:calc(100% - 24px)}
+      .links{display:none}
+      .actions,.actions .btn{width:100%}
+      .actions{display:grid;grid-template-columns:1fr 1fr}
+      .hero{padding-top:22px}
+      h1{font-size:30px}
+      .lead{font-size:15px}
+      .hero-actions{display:grid;grid-template-columns:1fr}
+      .hero-actions .btn{width:100%}
+      .status-row{grid-template-columns:1fr}
+      .section{padding:30px 0}
+    }
+  </style>
+</head>
+<body class="home-initializing">
+  <main class="home">
+    <div class="wrap">
+      <nav class="nav">
+        <a class="brand" href="/">
+          <img id="siteLogo" class="brand-logo" alt="平台Logo">
+          <span id="siteMark" class="mark">DNS</span>
+          <span id="siteName">二级域名租用平台</span>
+        </a>
+        <div class="links">
+          <a href="#features">平台优势</a>
+          <a href="#steps">开通流程</a>
+          <a href="#rules">使用规范</a>
+        </div>
+        <div class="actions">
+          <a class="btn" href="/login">登录</a>
+          <a class="btn primary" href="/register">注册</a>
+        </div>
+      </nav>
+
+      <section class="hero">
+        <div>
+          <div class="kicker">自助二级域名租赁与解析</div>
+          <h1>稳定、清晰、可管理的二级域名租用服务</h1>
+          <p class="lead">平台提供主域名选择、前缀查重、积分充值、积分租赁、解析创建和使用记录管理。用户注册后即可进入控制台，自助完成二级域名租赁和解析配置。</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="/register">立即注册</a>
+            <a class="btn" href="/login">已有账号登录</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div id="heroShot" class="hero-shot">
+            <img id="homeHeroImage" class="hero-image" alt="首页主图">
+            <h2>用户控制台</h2>
+            <p>选择主域名，填写解析前缀和用途说明，系统自动查重后使用积分完成租赁。</p>
+          </div>
+          <div class="status-row">
+            <div><span>租赁方式</span><strong>积分</strong></div>
+            <div><span>默认周期</span><strong>1个月</strong></div>
+            <div><span>解析管理</span><strong>自助</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <h2>平台优势</h2>
+        <div class="grid">
+          <article class="card"><strong>自助租赁</strong><p>用户登录后可以选择域名池中的主域名，填写前缀、记录类型和记录值，在线完成租赁申请。</p></article>
+          <article class="card"><strong>记录可查</strong><p>控制台展示当前账号的租赁记录、积分增加和扣减记录，订单与解析状态清晰可见。</p></article>
+          <article class="card"><strong>手机适配</strong><p>前台和后台均已适配手机端，表格支持横向滑动，功能栏在小屏中保持清晰可操作。</p></article>
+        </div>
+      </section>
+
+      <section id="steps" class="section">
+        <h2>开通流程</h2>
+        <div class="steps">
+          <article class="step"><b>1</b><strong>注册账号</strong><span>填写账号和密码完成注册，注册成功后直接进入用户控制台。</span></article>
+          <article class="step"><b>2</b><strong>充值积分</strong><span>在控制台充值积分，支付成功后积分同步到账，可在积分记录中查看。</span></article>
+          <article class="step"><b>3</b><strong>租赁域名</strong><span>选择主域名并填写解析信息，系统查重通过后扣除积分并创建解析记录。</span></article>
+        </div>
+      </section>
+
+      <section id="rules" class="section">
+        <h2>使用规范</h2>
+        <div class="notice">二级域名请用于合法合规用途，平台可根据服务条款管理相关解析记录。</div>
+      </section>
+
+      <footer class="footer">
+        <div>二级域名租用平台</div>
+      </footer>
+    </div>
+  </main>
+  <script>
+    (function(){
+      function text(value){ return String(value || '').trim(); }
+      function reveal(){ document.body.classList.remove('home-initializing'); }
+      function waitImage(img, src){
+        return new Promise(function(resolve){
+          if (!img || !src) return resolve();
+          var done = false;
+          var finish = function(){
+            if (done) return;
+            done = true;
+            resolve();
+          };
+          img.onload = finish;
+          img.onerror = finish;
+          img.src = src;
+          setTimeout(finish, 1200);
+        });
+      }
+      function applySettings(settings){
+        const name = text(settings.systemName);
+        const logoUrl = text(settings.siteLogoUrl);
+        const homeImageUrl = text(settings.homeImageUrl);
+        const waits = [];
+        if (name) {
+          document.title = name + ' - 自助解析与租赁';
+          const siteName = document.getElementById('siteName');
+          if (siteName) siteName.textContent = name;
+        }
+        if (logoUrl) {
+          const logo = document.getElementById('siteLogo');
+          const mark = document.getElementById('siteMark');
+          waits.push(waitImage(logo, logoUrl));
+          logo.style.display = 'block';
+          if (mark) mark.style.display = 'none';
+        }
+        if (homeImageUrl) {
+          const image = document.getElementById('homeHeroImage');
+          const shot = document.getElementById('heroShot');
+          waits.push(waitImage(image, homeImageUrl));
+          shot.classList.add('has-image');
+        }
+        return Promise.all(waits);
+      }
+      fetch('/api/public/site-settings', {headers:{Accept:'application/json'}})
+        .then(function(res){ return res.ok ? res.json() : null; })
+        .then(function(data){ return data ? applySettings(data) : null; })
+        .catch(function(){})
+        .then(reveal);
+      setTimeout(reveal, 1600);
+    })();
+  </script>
+</body>
+</html>

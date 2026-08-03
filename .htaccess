@@ -1,0 +1,24 @@
+Options -Indexes
+RewriteEngine On
+
+# PHP 设置
+php_flag display_errors Off
+php_flag html_errors Off
+php_value error_reporting 0
+
+# 保护 data 目录
+RewriteRule ^data/ - [F,L]
+
+# 管理员后台 /admin 路由
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^admin$ admin.html [L]
+RewriteRule ^admin/(.*)$ admin.html [L]
+
+# 把 /api/* 转发到 api.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ api.php [L,QSA]
+
+# 默认访问统一入口
+DirectoryIndex index.php

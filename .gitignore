@@ -1,0 +1,10 @@
+data/settings_cache.json
+data/recharge_orders/
+*.log
+*.sql.gz
+*.tar.gz
+*.zip
+*.bak
+*.bak_*
+.DS_Store
+Thumbs.db
