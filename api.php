@@ -294,7 +294,7 @@ function ensureTenantUserTables(): bool {
             status VARCHAR(20) NOT NULL DEFAULT 'enabled',
             created_at DATETIME DEFAULT NULL,
             updated_at DATETIME DEFAULT NULL,
-            KEY idx_status (status),
+            KEY idx_status (status)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         foreach ([
             "ALTER TABLE tenant_users ADD COLUMN password VARCHAR(32) DEFAULT NULL AFTER username",
